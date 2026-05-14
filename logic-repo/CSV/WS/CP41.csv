@@ -1,0 +1,129 @@
+################################################################################
+#
+# Fourth IQ BUILD
+#
+# CP41
+#
+################################################################################
+
+# build configuration
+OPT_AUG,BUILD_INDEX , 0x3C
+
+################################################################################
+# rf technologies
+################################################################################
+
+#  ble settings
+OPT_AUG,OPERATION_INDEX , ENABLE_BLE
+OPT_AUG,BLE_OPTIONS_2_INDEX , BLE_UNIQUE_NAME
+
+# lf 125 khz
+OPT_AUG,OPERATION_INDEX , ENABLE_FSK_RF
+HW,ASK,ENABLE
+OPT_AUG,OPERATION_INDEX , ENABLE_ASK_RF
+OPT_AUG,WIEGAND_DATA_OPTIONS_INDEX ,  WIEGAND_CASI_4001_2_MASK
+
+# hf 13.56 mhz
+OPT_AUG,OPERATION_INDEX , ENABLE_HF_RF
+
+# mifare
+RF,0 , CP_ISO_14443A
+
+# iclass
+RF,1, CP_ISO_15693
+RF,2 , CP_PICO_15693
+
+################################################################################
+# prox filter
+################################################################################
+
+# filter all 30 bit prox cards
+BS_SET, FILTER , BS_FILTER_LF
+BS_AUG, FILTER , BS_FILTER_FUNC_ME
+BS_SET, NUM_BITS , 30
+BS_FILTER_MASK, 0 , 0x1F
+BS_FILTER_MASK, 1 , 0xFF
+BS_FILTER_MASK, 2 , 0xFF
+BS_FILTER_MASK, 3 , 0xFF
+BS_FILTER_MASK, 4 , 0xFF
+
+BS_FILTER_VALUE, 0 , 0x00
+BS_FILTER_VALUE, 1 , 0x00
+BS_FILTER_VALUE, 2 , 0x00
+BS_FILTER_VALUE, 3 , 0x00
+BS_FILTER_VALUE, 4 , 0x00
+
+################################################################################
+# smart card support
+################################################################################
+
+# leaf cc support
+APP,CT_MF_DESFIRE_EV1_2,0, CA_LEAF_IP
+
+OPT,LEAF_IP_DEF_INDEX , 40
+OPT,LEAF_IP_KS1_INDEX , 1
+OPT,LEAF_IP_KS2_INDEX , LEAF_IP_IGNORE_KEYSET_MASK
+OPT,LEAF_IP_KS3_INDEX , LEAF_IP_IGNORE_KEYSET_MASK
+
+# leaf cc read key
+LEAF_IP_OCPSK_KEYSET , Lk50003:Kc1
+LEAF_IP_READ_KEYSET ,Lk50003:Kc1
+
+# leaf si read key
+LEAF_IP_KS1_OCPSK_KEYSET, Lk00001:Ksi
+LEAF_IP_KS1_READ_KEYSET, Lk00001:Kv1
+
+LEAF_KHSENC1_KEYS , ETHOS:LEAF_KHSENC1
+LEAF_KHSENC2_KEYS , ETHOS:LEAF_KHSENC2
+LEAF_HSREAD_KEYS , ETHOS:LEAF_HSREAD
+LEAF_KBLEENC2_KEYS , ETHOS:LEAF_KBLEENC2
+
+# config cards
+APP,CT_MF_DESFIRE_EV1_2,1, CA_FEATURES_KEYS
+
+FEATURE_MANAGEMENT_READ_KEYSET, ETHOS:FEATURE_READ
+FEATURE_MANAGEMENT_WRITE_KEYSET, ETHOS:FEATURE_WRITE
+
+# csns
+APP,CT_MF_DESFIRE_EV1_2,2, CA_CSN
+OPT,CSN_FORMAT_ISO14443A_CL1_CL2 , ((CSN_32_BIT_MSB << 8)  | wl.CSN_32_BIT_MSB)
+
+# 32 bit iClass CSN
+OPT,CSN_FORMAT_ISO15693_PICO15693, ((CSN_32_BIT_MSB << 8) | (wl.CSN_32_BIT_MSB))
+
+################################################################################
+# mobile
+################################################################################
+
+# mypass custom server
+APP,CT_ISO_14443A_4,0 , CA_ANDROID_NFC
+APP,CT_GENERIC_CL2,0 , CA_ANDROID_NFC
+
+# credentials enabled (no transport mode) and both keyslots active
+MOBILE,features,0
+MOBILE,activeKeysets,(MOBILE_ACTIVE_KEYSET_SLOT1 | wl.MOBILE_ACTIVE_KEYSET_SLOT2)
+
+# pdk's keys in slot 1, fourth iq keys in slot 2
+NFC_KM1_KEYS , Lk50003:Mkm
+NFC_KC1_KEYS , Lk50003:Mkc
+NFC_KM2_KEYS , Lk50009:Mkm2
+NFC_KC2_KEYS , Lk50009:Mkc2
+
+# ecp
+APP,CT_ECP_NFC,0 , CA_NONE   #  ECP is disabled
+
+################################################################################
+# misc keysets
+################################################################################
+
+USER_APP_OCPSK_KEYSET,ETHOS:USER_APP_CARD_MASTER
+USER_APP_READ_KEYSET,ETHOS:USER_APP_CARD_WRITE
+
+USER_APP_CARD_MASTER_KEYSET , ETHOS:USER_APP_CARD_MASTER
+USER_APP_CARD_WRITE_KEYSET , ETHOS:USER_APP_CARD_WRITE
+EXT_MEM_KEYSET , ETHOS:EXT_MEM
+BLE_KEYSET , ETHOS:BLE
+MFC_KEYSET , ETHOS:MFC
+USER_APP2_K1_KEYSET , ETHOS:USER_APP2_K1
+USER_APP2_K2_KEYSET , ETHOS:USER_APP2_K2
+

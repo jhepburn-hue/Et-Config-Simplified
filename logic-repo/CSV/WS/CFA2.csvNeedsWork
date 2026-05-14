@@ -1,0 +1,86 @@
+#FIDELITY_BUILD
+#  Record the build configuration
+OPT_AUG,BUILD_INDEX , FW_BUILD_FIDELITY
+OPT_AUG,BLE_OPTIONS_2_INDEX , BLE_FIDELITY
+
+#  Enable Host Interface as Wiegand
+#  Enable Wiegand Only
+OPT,HOST_SP_OPTIONS_INDEX , 0
+OPT_MASK,OPERATION_INDEX , ~(OSDP_AUTO_DETECT_ACTIVE)
+OPT_MASK,EXT_OPERATION_INDEX , ~(TAMPER_INITIATES_OSDP_AUTO) 
+
+# 
+#  Fidelity LED operations
+# 
+#  GREEN is idle state
+#  LED off on card reads
+#   Blue LED PWM , 50% (5)
+#   Green LED PWM , 50% (5)
+#   Red LED PWM , 60% (6)
+# 
+# 
+#OPT,LED_OPTIONS_1_INDEX,(DEFAULT_LED_PWM_DUTY_CYCLES  | wl.GREEN_LED)
+LED,DEFAULT_LED_PWM_DUTY_CYCLES,GREEN_LED,GREEN_LED
+OPT,LED_OPTIONS_2_INDEX,OSDP_REVERSE_RED_GREEN_LED_MASK
+
+#  Enable BLE
+#  Bootloading and config file loading times out after one minute.
+OPT_AUG,OPERATION_INDEX , ENABLE_BLE
+OPT_MASK,BLE_OPTIONS_1_INDEX , ~BLE_ALLOW_BOOT_LOAD_MASK
+
+#  FSK 125 KHz Low Frequency RF Front End
+#  STD Release
+OPT_AUG,OPERATION_INDEX , ENABLE_FSK_RF
+
+# 
+#  No support for ASK.
+# 
+
+#  RF_FE_HF , 13.56 MHz High Frequency RF Front End
+OPT_AUG,OPERATION_INDEX , ENABLE_HF_RF
+
+#  Enable high polling frequency
+OPT_AUG,EXT_OPERATION_INDEX , FAST_HF_POLL_FREQUENCY
+
+#  Tamper Signal Line Enabled
+OPT_AUG,OPERATION_INDEX , ENABLE_TAMPER_CNTRL_LINE	
+
+#  Enable Host Controlled AV
+OPT_AUG,OPERATION_INDEX , ENABLE_HOST_CNTL_AV
+
+#  Transmit the reset indicator on reset or power up.
+OPT_AUG,WIEGAND_DATA_OPTIONS_INDEX , WIEGAND_TRANSMIT_POR
+
+#  Fidelity Sector , 1, Diversification Disabled
+# MFC_APP_INDEX , 0x0001
+#  Fidelity Sector , 2, Diversification Enabled
+OPT,MFC_APP_INDEX , 0x0102
+#  Fidelity Sector , 4, Diversification Enabled
+# MFC_APP_INDEX , 0x0104
+
+# 
+#  Default LEAF IP - Kc1 - Cc App AID - EV1_CARD_KEY_1
+#  Ignore custom key sets.
+# 
+OPT,LEAF_IP_DEF_INDEX , 40
+OPT,LEAF_IP_KS1_INDEX , LEAF_IP_IGNORE_KEYSET_MASK
+OPT,LEAF_IP_KS2_INDEX , LEAF_IP_IGNORE_KEYSET_MASK
+OPT,LEAF_IP_KS3_INDEX , LEAF_IP_IGNORE_KEYSET_MASK
+
+#  Add all RF protocols
+RF,0 , CP_ISO_14443A
+#  Smart card application support
+APP,ALL , CA_NONE
+
+APP,CT_MF_DESFIRE_EV1_2,0, CA_LEAF_IP
+APP,CT_MF_DESFIRE_EV1_2,1, CA_FEATURES_KEYS
+APP,CT_MF_CLASSIC,0 , CA_MFC_FIDELITY
+
+ENCKEY, Fidelity
+
+#the below keys need to be updated to use the NFC keysets once loaded.
+NFC_KM1_KEYS , Ck00001:KM1
+NFC_KC1_KEYS ,Ck00001:KC1
+NFC_KM2_KEYS , Ck00001:KM2
+NFC_KC2_KEYS , Ck00001:KC2
+

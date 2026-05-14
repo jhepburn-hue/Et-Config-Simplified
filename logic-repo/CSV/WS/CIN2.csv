@@ -1,0 +1,94 @@
+#INOVONICS_BUILD
+#  Record the build configuration
+OPT_AUG,BUILD_INDEX , 0x45
+OPT_AUG,BLE_OPTIONS_2_INDEX , BLE_WAVELYNX
+
+#  Warning: The LED and beeper settings below will disable any 
+#           AV feedback for card reads when testing this without 
+#           an OSDP panel.
+
+# 
+#  Default LED operations
+#   LED Off is idle state
+#   Also no blink on card reads (so really, no blink)
+#   Blue LED PWM , 50% (5)
+#   Green LED PWM , 50% (5)
+#   Red LED PWM , 60% (6)
+# 
+OPT,LED_OPTIONS_1_INDEX , DEFAULT_LED_PWM_DUTY_CYCLES
+OPT_MASK,LED_OPTIONS_2_INDEX , ~(BLUE_LED_IDLE_COLOR_MASK)
+#  Custom blink time of 0 seconds, so really, no blink on card read.
+OPT,CARD_AV_OPTIONS_2_INDEX , CARD_AV_LED_ENABLED
+
+# 
+#  Custom beep time of 0 seconds, so really, no beep on card read.
+# 
+OPT,CARD_AV_OPTIONS_1_INDEX,CARD_AV_BEEPER_ENABLED
+
+#  Enable BLE, but ignore BLE credentials
+OPT_AUG,OPERATION_INDEX , ENABLE_BLE
+
+#  FSK 125 KHz Low Frequency RF Front End
+#  STD Release
+OPT_AUG,OPERATION_INDEX , ENABLE_FSK_RF
+
+# 
+#  If this is a newer platform, there will be support for ASK.
+# 
+ HW,ASK,ENABLE
+
+OPT_AUG,OPERATION_INDEX , ENABLE_ASK_RF 
+OPT_AUG,WIEGAND_DATA_OPTIONS_INDEX ,  WIEGAND_CASI_4001_2_MASK
+
+
+#  No 13.56 MHz High Frequency support
+
+#  Tamper Signal Line Enabled
+OPT_AUG,OPERATION_INDEX , ENABLE_TAMPER_CNTRL_LINE	
+
+#  Enable Host Controlled AV exclusive
+OPT_AUG,OPERATION_INDEX , ENABLE_HOST_CNTL_AV
+
+#  Add all RF protocols
+
+RF,0 , CP_ISO_14443A
+RF,1 , CP_ISO_15693
+RF,2 , CP_PICO_15693
+#  Smart card application support
+APP,CT_MF_DESFIRE_EV1_2,0 , CA_LEAF_IP
+APP,CT_MF_DESFIRE_EV1_2,1 , CA_FEATURES_KEYS
+APP,CT_MF_DESFIRE_EV1_2,2 , CA_CSN
+
+FEATURE_MANAGEMENT_READ_KEYSET, ETHOS:FEATURE_READ
+FEATURE_MANAGEMENT_WRITE_KEYSET, ETHOS:FEATURE_WRITE
+
+USER_APP_CARD_MASTER_KEYSET , ETHOS:USER_APP_CARD_MASTER
+USER_APP_CARD_WRITE_KEYSET , ETHOS:USER_APP_CARD_WRITE
+EXT_MEM_KEYSET , ETHOS:EXT_MEM
+BLE_KEYSET , ETHOS:BLE
+MFC_KEYSET , ETHOS:MFC
+USER_APP2_K1_KEYSET , ETHOS:USER_APP2_K1
+USER_APP2_K2_KEYSET , ETHOS:USER_APP2_K2
+
+LEAF_IP_OCPSK_KEYSET , Lk00001:Ksi
+LEAF_IP_READ_KEYSET ,Lk00001:Kv1
+
+
+
+#Update LEAF_IP_CARD_MASTER/WRITE_KEYSET and to LK00001.Kc1 at a later date
+LEAF_IP_CARD_MASTER_KEYSET , ETHOS:LEAF_IP_CARD_MASTER
+LEAF_IP_CARD_WRITE_KEYSET , ETHOS:LEAF_IP_CARD_WRITE
+#
+
+LEAF_KHSENC1_KEYS , ETHOS:LEAF_KHSENC1
+LEAF_KHSENC2_KEYS , ETHOS:LEAF_KHSENC2
+LEAF_HSREAD_KEYS , ETHOS:LEAF_HSREAD
+LEAF_KBLEENC2_KEYS , ETHOS:LEAF_KBLEENC2    
+
+
+#the below keys need to be updated to use the NFC keysets once loaded.
+NFC_KM1_KEYS , Ck00001:KM1
+NFC_KC1_KEYS ,Ck00001:KC1
+NFC_KM2_KEYS , Ck00001:KM2
+NFC_KC2_KEYS , Ck00001:KC2
+# Disable AV3 Use

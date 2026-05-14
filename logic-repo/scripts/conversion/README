@@ -1,0 +1,5 @@
+After the intial conversion this proabably isnt of much use...
+
+To use update the PATH_TO_SRC in mkCfgFromC.sh and the output will be located in raw/config* config name
+
+This won't convert the entire configuration keys and applications might need to be manually massaged but it is better than doing it all from scratch. 

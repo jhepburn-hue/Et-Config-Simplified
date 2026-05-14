@@ -1,0 +1,90 @@
+#+TITLE: ET CONFIG
+
+A toolset for generating configurations for Ethos Access Readers.
+
+* Container Structure
+All configuration file structures are of *TLV (Tag Length Value)* format. The outer TLV
+of a configuration file is an /Envelope TLV/. The value field of the container envelope
+may contain any number of the described file types.
+
+| Field               | Length (bytes) | Value                                                |
+|---------------------+----------------+------------------------------------------------------|
+| Envelope Tag        |              1 | ~0x0E~                                               |
+| Envelope Length     |            1-N | Length of envelope data. Follows TLV length ID spec. |
+| Config File Data    |            1-N | Configuration file data.                             |
+| Envelope CRC Tag    |              1 | ~0xEF~                                               |
+| Envelope CRC Length |              1 | ~0x02~                                               |
+| Envelope CRC        |              2 | Big endian CCITT CRC 16 value.                       |
+
++ The /Envelope CRC/ is calculated over the *ENTIRE* contents of the envelope, including
+  tag and length. This is performed using the WaveLynx standard CCITT calculation.
+
+** File Types
+The data field of a configuration file can contain any number of TLVs to configure various
+components or load firmware images. The following types of file contents are supported:
+
+| File        | Description                                                          |
+|-------------+----------------------------------------------------------------------|
+| Op Settings | *Dangerous* Bulk overwrite system features structure. /Needs review/ |
+| Card Types  | *Dangerous* Updates the entire card types structure. /Needs review/  |
+| Config      | Configure new features.                                              |
+| Firmware    | Entire firmware image.                                               |
+| BLE Config  | Configure the BLE MCU.                                               |
+
+*** Encryption
+Each file within the Envelope TLV is encrypted. Encryption methods differ based on the
+file type.
+
++ All files are encrypted using AES128-CBC.
++ All files are encrypted with the OSDP external memory key, save for firmware files,
+  which are encrypted with a specific bootloader key.
+
+The following special notes on encryption should be followed for each file type:
+
+| File Type   | Encryption Method                                                  |
+|-------------+--------------------------------------------------------------------|
+| Op Settings | IV is first 16 bytes of file.                                      |
+| Card Types  | IV is first 16 bytes of file.                                      |
+| Config      | NULL IV should be used.                                            |
+| Firmware    | Refer to firmware file format for details on encryption of images. |
+| BLE Config  | NULL IV should be used.                                            |
+
+* File Options
+
+** Op Settings
+The /Op Settings/ file contains the entire Operational Settings memory structure stored in
+the reader. The reader will blindly overwrite this memory location with the contents of
+this file.
+
+*WARNING* This file type should not be used if possible.
+
+** Card Types
+The /Card Types/ file contains the entire RF Protocols memory structure stored in the
+reader. The reader will blindly overwrite this memory location with the contents of
+this file.
+
+*WARNING* This file type should not be used if possible.
+
+** Config
+The /Config/ file contains one or more feature management TLVs which can set/unset/toggle
+all of the various features found on the reader.
+
+/See the Features specification for details on how these are constructed./
+
+** Firmware
+/Refer to the firmware file specification document for details on this file structure./
+
+** BLE Config
+/Refer to the CyConfig specification for details on this file structure./
+
+* Appendix A: Message Constants
+
+| TAG    | Byte Value           |
+|--------+----------------------|
+| ~0x0E~ | Envelope             |
+| ~0xEF~ | Envelope CRC         |
+| ~0x90~ | BLE Op Settings      |
+| ~0x91~ | BLE Card Types       |
+| ~0x0C~ | Config               |
+| ~0x0F~ | Firmware             |
+| ~0x1C~ | BLE Config           |

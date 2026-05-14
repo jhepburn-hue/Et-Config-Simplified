@@ -1,0 +1,100 @@
+To generate stubs of all of the configurations present in the firmware:
+Run ./convertAll.sh 
+This will look at the userConfig.c file in the firmware with at ../../WallMountReader/WallMountReader/src/
+and Split it into individual configuration template sections. These sections will then be split into individual files
+that will be run through the mkCfgFromC.sh that will attempt to convert the C formatting into the CSV formatting
+used for the configuration files
+
+CSV options we generate a mapping from the C to the python so the same configuration names can be used in the configuration
+this allows for a more readable configuation to a firmware engineer although integer values may be used as well.
+    
+    #specify the HW type this is used for configuration checking
+    HW,TYPE,<7>
+
+    #Set Configuation options
+    OPT, <CONFIGURATION INDEX>, <VALUE>
+        #OPT is an = 
+            OPT,LEAF_IP_DEF_INDEX , 40
+        #OPT_AUG is and |=
+            OPT_AUG,BUILD_INDEX , FW_BUILD_DARTMOUTH
+
+    #  Add all RF protocols 
+        # NOTE: these need to be edited as I have yet to figure out how to have sed perform i++ 
+            RF, <INDEX>, <VALUE>
+            RF,0 , CP_ISO_14443A
+            RF,1 , CP_ISO_15693
+            RF,2 , CP_PICO_15693
+
+    #  Smart card application support
+        # NOTE: these need to be edited as I have yet to figure out how to have sed perform i++ 
+        # this inserts an value into a 2D array
+            APP,<CARD_APPLICAION>,<APPLICAION_INDEX>, <VALUE>
+            APP,CT_MF_DESFIRE_EV1_2,0 , CA_LEAF_IP
+        #it is also possible to set all fields to a given value
+            APP,ALL,<CA_NONE>
+
+    #PROX FILTERS
+        #slightly more complicated but this follows the formmating of system options the AUG comes in handy for converting c structures
+            #BS_SET, FILTER , <VALUE>
+            #BS_AUG, FILTER , <VALUE>
+                BS_SET, FILTER , BS_FILTER_LF
+                BS_AUG, FILTER , BS_FILTER_FUNC_EQ
+
+            #BS_SET, NUM_BITS , <VALUE>
+               BS_SET, NUM_BITS , 35
+            
+            #BS_FILTER_MASK, <index> , <VALUE>
+                BS_FILTER_MASK, 0 , 0x01
+            #BS_FILTER_VALUE, <index> , <VALUE>
+                BS_FILTER_VALUE, 0 , 0x00
+
+
+    #Configuring keys
+        #The following are constant for all Ethos ws readers
+
+        #KEY, FEATURE_MANAGEMENT_KEYSET, HELLO
+        FEATURE_MANAGEMENT_READ_KEYSET, ETHOS_PT:keyID_1_a
+        FEATURE_MANAGEMENT_WRITE_KEYSET, ETHOS_PT:keyID_1_b
+        EXT_MEM_KEYSET , ETHOS_PT:keyID_4_a
+        OSDP_KEYSET , ETHOS_PT:keyID_4_b
+        BLE_KEYSET , ETHOS_PT:keyID_5_a
+
+        #these keys are no longer used may be reporeassigned at a later date 
+        LEAF_KHSENC1_KEYS , ETHOS_PT:keyID_12_a
+        LEAF_KHSENC2_KEYS , ETHOS_PT:keyID_12_b
+        LEAF_HSREAD_KEYS , ETHOS_PT:keyID_13_a
+        LEAF_KBLEENC2_KEYS , ETHOS_PT:keyID_13_b
+
+
+        #Change the following based on end user Configuration
+        USER_APP_OCPSK_KEYSET,ETHOS_PT:keyID_2_a
+        USER_APP_READ_KEYSET,ETHOS_PT:keyID_2_b
+        USER_APP_CARD_MASTER_KEYSET , ETHOS_PT:keyID_3_a
+        USER_APP_CARD_WRITE_KEYSET , ETHOS_PT:keyID_3_b
+        MFC_KEYSET , ETHOS_PT:keyID_5_b
+        USER_APP2_K1_KEYSET , ETHOS_PT:keyID_6_a
+        USER_APP2_K2_KEYSET , ETHOS_PT:keyID_6_b
+
+        LEAF_IP_OCPSK_KEYSET , ETHOS_PT:keyID_7_a
+        LEAF_IP_READ_KEYSET , ETHOS_PT:keyID_7_b
+        #card writes are not currently supported by the reader
+        LEAF_IP_CARD_MASTER_KEYSET , ETHOS_PT:keyID_8_a
+        LEAF_IP_CARD_WRITE_KEYSET , ETHOS_PT:keyID_8_b
+        LEAF_IP_KS1_OCPSK_KEYSET , ETHOS_PT:keyID_9_a
+        LEAF_IP_KS1_READ_KEYSET , ETHOS_PT:keyID_9_b
+        LEAF_IP_KS2_OCPSK_KEYSET , ETHOS_PT:keyID_10_a
+        LEAF_IP_KS2_READ_KEYSET , ETHOS_PT:keyID_10_b
+        LEAF_IP_KS3_OCPSK_KEYSET , ETHOS_PT:keyID_11_a
+        LEAF_IP_KS3_READ_KEYSET , ETHOS_PT:keyID_11_b
+        #Customer NFC keys
+        NFC_KM1_KEYS , ETHOS_PT:keyID_14_a
+        NFC_KC1_KEYS , ETHOS_PT:keyID_14_b
+        NFC_KM2_KEYS , ETHOS_PT:keyID_15_a
+        NFC_KC2_KEYS , ETHOS_PT:keyID_15_b
+        NFC_MP0_KEYS , ETHOS_PT:keyID_16_a
+        NFC_MC0_KEYS , ETHOS_PT:keyID_16_b
+
+To build a configuration: python3 buildCfg.py <fileName.CSV>
+
+To build a UserKeys.c block run python3 buildCfg.py <fileName.CSV> ETHOS_PT:eKey 
+    Where the eKey is the encryption key to use to obfuscate the keys.

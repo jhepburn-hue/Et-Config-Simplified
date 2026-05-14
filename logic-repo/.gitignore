@@ -1,0 +1,17 @@
+/scripts/configs/*
+/scripts/conversion/raw/
+/scripts/conversion/ETHOS.keyfile
+/scripts/conversion/ETHOS_PT.keyfile
+TaylorsToken.txt
+getKeyset.bat
+getkeyset.sh
+__pycache__/
+configs/
+.vscode/
+/scripts/*.csv
+/sales/*.csv
+scratch_seq.json
+/apex/.env
+/apex/temp_ini/*
+.venv
+venv

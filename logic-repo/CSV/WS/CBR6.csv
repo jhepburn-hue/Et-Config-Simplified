@@ -1,0 +1,144 @@
+# BRIVO_BUILD
+#
+# This is the Brivo Wallet build which matches CBR4 in functionality
+# Author: Taylor Schmidt, Nov 11, 2022
+#
+
+OPT_AUG,BUILD_INDEX,0xAA
+OPT_AUG,LED_OPTIONS_3_INDEX,0x0080
+
+################################################################################
+# Base Settings
+################################################################################
+
+# Tamper Signal Line Enabled
+OPT_AUG,OPERATION_INDEX , ENABLE_TAMPER_CNTRL_LINE
+
+# Enable Host Controlled AV
+OPT_AUG,OPERATION_INDEX , ENABLE_HOST_CNTL_AV
+
+# Disable SE
+
+
+EXT_MEM_KEYSET , ETHOS:EXT_MEM
+
+################################################################################
+# BLE/MyPass Settings
+################################################################################
+
+# Enable BLE
+OPT_AUG,OPERATION_INDEX,ENABLE_BLE
+
+# Set the BLE to "BRVO" advertising, which enables the Brivo passthrough
+# BLE protocol
+OPT_AUG,BLE_OPTIONS_2_INDEX,BLE_BRIVO
+
+# Set MyPass keys which are unused by Brivo
+NFC_KM1_KEYS, Lk50010:Mkm
+NFC_KC1_KEYS, Lk50010:Mkc
+
+BLE_KEYSET , BRIVO:BLE
+
+################################################################################
+# LF Settings
+################################################################################
+
+# FSK 125 KHz Low Frequency RF Front End
+OPT_AUG,OPERATION_INDEX,ENABLE_FSK_RF
+
+# Enable ASK
+HW,ASK,ENABLE
+OPT_AUG,OPERATION_INDEX,ENABLE_ASK_RF
+OPT_AUG,WIEGAND_DATA_OPTIONS_INDEX,WIEGAND_CASI_4001_2_MASK
+
+################################################################################
+# HF Settings
+################################################################################
+
+# 13.56 MHz High Frequency RF Front End
+OPT_AUG,OPERATION_INDEX , ENABLE_HF_RF
+
+#  Add all RF protocols
+
+RF,0 , CP_ISO_14443A
+# RF,1, CP_ISO_15693
+# RF,2 , CP_PICO_15693
+
+#
+#  Smart card application support
+#
+
+APP,CT_MF_DESFIRE_EV1_2,0, CA_LEAF_IP
+APP,CT_MF_DESFIRE_EV1_2,1,CA_NEXPACS
+APP,CT_MF_DESFIRE_EV1_2,2, CA_FEATURES_KEYS
+
+# enable apple wallet
+APP,CT_ECP_NFC,0,CA_MERIDIAN_NFC
+
+# uncomment these lines for MF2GO support
+APP,CT_MF_DESFIRE_EV1_2,3,CA_M2GO_GENERIC_ACD
+APP,CT_ISO_14443A_4,0,CA_M2GO_GENERIC_ACD
+APP,CT_GENERIC_CL2,0,CA_M2GO_GENERIC_ACD
+
+# comment this line for MF2GO support, EVX CSNs need to be disabled
+# APP,CT_MF_DESFIRE_EV1_2,3, CA_CSN
+
+USER_APP_OCPSK_KEYSET,Lk50010:OCPSK
+USER_APP_READ_KEYSET,Lk50010:APPVK
+USER_APP_CARD_MASTER_KEYSET , Lk50010:APPVK
+USER_APP_CARD_WRITE_KEYSET , BRIVO:USER_APP_CARD_WRITE
+
+MFC_KEYSET , BRIVO:MFC
+
+USER_APP2_K1_KEYSET , ETHOS:USER_APP2_K1
+USER_APP2_K2_KEYSET , ETHOS:USER_APP2_K2
+
+OPT_AUG, NEXPACS_OPTIONS_INDEX, SKIP_SIGNATURE_CHECK
+OPT_AUG,NEXPACS_OPTIONS_INDEX, SKIP_CIO
+
+#
+# LEAF settings
+#
+
+OPT,LEAF_IP_DEF_INDEX , 40
+OPT,LEAF_IP_KS1_INDEX , 1
+OPT,LEAF_IP_KS2_INDEX , LEAF_IP_IGNORE_KEYSET_MASK
+OPT,LEAF_IP_KS3_INDEX , LEAF_IP_IGNORE_KEYSET_MASK
+
+# leaf cc read key
+LEAF_IP_OCPSK_KEYSET , Lk50010:Kc1
+LEAF_IP_READ_KEYSET ,  Lk50010:Kc1
+
+# leaf si read key
+LEAF_IP_KS1_OCPSK_KEYSET, Lk00001:Ksi
+LEAF_IP_KS1_READ_KEYSET, Lk00001:Kv1
+
+# apple meridian keys
+NFC_MP0_KEYS,Lk50010:Kr0
+NFC_MC0_KEYS,Lk50010:Kr1
+
+# apple ecp settings
+MOBILE,ecpFormat,ECP_FORMAT_2
+MOBILE,ecpTerminalInfoMode,ECP_WL_TERMINAL_INFO
+MOBILE,ecpTerminalType,ECP_TERMINAL_TYPE
+MOBILE,ecpTerminalSubType,ECP_TERMINAL_SUBTYPE_CORPORATE
+MOBILE,ecpTCI_1,ECP_TCI_1
+MOBILE,ecpTCI_2,0x30
+MOBILE,ecpTCI_3,0x00
+
+# meridian credential application num bits
+MOBILE,ecpBitCount,128
+
+# Config card keys
+FEATURE_MANAGEMENT_READ_KEYSET, ETHOS:FEATURE_READ
+FEATURE_MANAGEMENT_WRITE_KEYSET, ETHOS:FEATURE_WRITE
+
+################################################################################
+# CapTouch Settings
+################################################################################
+
+# uncomment to enable captouch
+# captouch is disabled by default for wallet configss
+# OPT,CAPTOUCH_FEATURES_INDEX , 0x5400
+# OPT_AUG,CAPTOUCH_FEATURES_INDEX, CAPTOUCH_ENABLED_MASK
+# OPT,CAPTOUCH_EVENT_TRIGGER_LEVEL,30

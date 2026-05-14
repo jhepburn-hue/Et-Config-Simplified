@@ -1,0 +1,363 @@
+#+TITLE: Features
+
+This document describes the various feature TLVs which can be embedded in a
+/Config/ file type. Refer to the /Configuration File/ specification for a
+definition of the containing file structure for the feature TLVs.
+
+* Change Serial Number
+Change the serial number of the device.
+
+| Field  | Length | Value                     |
+|--------+--------+---------------------------|
+| TAG    |      1 | ~0xE2~                    |
+| LENGTH |      1 | ~0x08~                    |
+| S/N    |      8 | New reader serial number. |
+
+* Prox Filter
+Configure the prox/bitstream filter.
+
+| Field          | Length | Value                     |
+|----------------+--------+---------------------------|
+| TAG            |      1 | ~0xFC~                    |
+| LENGTH         |      1 | ~0x12~                    |
+| Applied Filter |      1 | Applied filter bitmask.   |
+| Num Bits       |      1 | Number of bits in filter. |
+| Filter Mask    |      8 | Prox filter mask.         |
+| Filter Value   |      8 | Prox filter value.        |
+
+** Applied Filter
+The applied filter field can have the following values applied as a bitmask.
+
+/Note: The lower nibble chooses the filter technology. The upper nibble chooses function./
+
+| Field        | Value  |
+|--------------+--------|
+| Filter HF    | ~0x01~ |
+| Filter LF    | ~0x02~ |
+| Filter BLE   | ~0x04~ |
+| Filter CSN   | ~0x08~ |
+| Equal to     | ~0x00~ |
+| Greater than | ~0x40~ |
+| Less than    | ~0x80~ |
+| Not Equal to | ~0xC0~ |
+
+* Reset to Loaded Config
+Resets all settings to their originally loaded values from the factory.
+
+| Field  | Length | Value  |
+|--------+--------+--------|
+| TAG    |      1 | ~0xFB~ |
+| LENGTH |      1 | ~0x00~ |
+
+* Reset to Standard Features
+Reset to absolute default settings (Pre-factory config).
+
+*This is only available if reader is in developer mode.*
+
+| Field  | Length | Value  |
+|--------+--------+--------|
+| TAG    |      1 | ~0xF0~ |
+| LENGTH |      1 | ~0x00~ |
+
+* Reset to Standard Keys
+Reset to absolute standard keys.
+
+*This is only available if reader is in developer mode.*
+
+| Field  | Length | Value  |
+|--------+--------+--------|
+| TAG    |      1 | ~0xF8~ |
+| LENGTH |      1 | ~0x00~ |
+
+* Full Feature Setup
+Performs a "full configuration" overwriting the entire ~SystemFeatures~ structure in the
+reader.
+
+*NOTE:* If the reader is in developer mode and this TLV is passed with a 0 length. The
+full configuration will be written to the next config card presented to the reader.
+
+| Field           | Length | Value                                       |
+|-----------------+--------+---------------------------------------------|
+| TAG             |      1 | ~0xF1~                                      |
+| LENGTH          |      3 | ~0x820400~                                  |
+| System Features |   1024 | The entire ~SystemFeatures~ data structure. |
+
+* ECP NFC Setup
+Configures the parameters in the Apple ECP 14443-A polling structure.
+
+*NOTE:* These values will be provided by Apple in most cases, but a few of the fields
+remain somewhat fixed initially.
+
+| Field                 | Length | Value                           |
+|-----------------------+--------+---------------------------------|
+| TAG                   |      1 | ~0xD2~                          |
+| LENGTH                |      1 | ~0x07~                          |
+| ECP format            |      1 | ~0x02~                          |
+| ECP terminal info     |      1 | ~0xC3~ or ~0x83~ for user auth. |
+| ECP terminal type     |      1 | ~0x02~                          |
+| ECP terminal sub-type |      1 | See Subtypes.                   |
+| TCI 1                 |      1 | ~0x02~                          |
+| TCI 2                 |      1 | End user specific               |
+| TCI 3                 |      1 | End user specific               |
+
+** Sub Types
+
+| University  | ~0x00~ |
+| Corporate   | ~0x01~ |
+| Hospitality | ~0x02~ |
+| Residentail | ~0x03~ |
+
+* Android NFC Setup
+Configure the Android NFC settings for LFM credentials.
+
+| Field        | Length | Value                                    |
+|--------------+--------+------------------------------------------|
+| TAG          |      1 | ~0xD2~                                   |
+| LENGTH       |      1 | ~0x46~                                   |
+| NFC Settings |     70 | The entire ~nfcSettings~ data structure. |
+
+* Operational Settings
+Modify the operational settings. This TLV performs individual modifications
+to fields within the ~OpSettings~ structure in the reader.
+
+| Field         | Length | Value                              |
+|---------------+--------+------------------------------------|
+| TAG           |      1 | ~0xF3~                             |
+| LENGTH        |      1 | ~0x04~                             |
+| Bit operation |      1 | See bit operations.                |
+| Option index  |      1 | Index to perform operation on.     |
+| Option data   |      2 | Mask to use with the bit operation |
+
+** Bit Options
+
+| Option     | Value  |
+|------------+--------|
+| Bit Clear  | ~0x01~ |
+| Bit Set    | ~0x02~ |
+| Bit Toggle | ~0x03~ |
+
+* RF Protocols
+Modify the supported RF protocols. This will overwrite the current card protocols
+configured in the reader.
+
+| Field        | Length | Value                        |
+|--------------+--------+------------------------------|
+| TAG          |      1 | ~0xF4~                       |
+| LENGTH       |      1 | ~0x01~ to ~0x10~             |
+| RF Protocols |   1-16 | New RF protocols to support. |
+
+* Card Apps
+Modify the supported smart card/BLE applications. This will overwrite the current
+supported card types.
+
+| Field      | Length | Value                      |
+|------------+--------+----------------------------|
+| TAG        |      1 | ~0xF5~                     |
+| LENGTH     |      1 | ~0x01~ to ~0x08~           |
+| Card Types |    1-8 | New card types to support. |
+
+* Keyset
+Load a keyset into the reader.
+
+| Field         | Length | Value                                         |
+|---------------+--------+-----------------------------------------------|
+| TAG           |      1 | ~0xF6~                                        |
+| LENGTH        |      1 | ~0x20~                                        |
+| Keyset Number |      1 | The keyset number to overwrite in the reader. |
+| Keyset        |     32 | Two AES128 keys to overwrite in keyset slot.  |
+
+* Force Software Reset
+Forces the reader to perform a full reset.
+
+| Field  | Length | Value  |
+|--------+--------+--------|
+| TAG    |      1 | ~0xEB~ |
+| LENGTH |      1 | ~0x00~ |
+
+* Rotate Option
+Rotate/toggle a configuration option.
+
+| Field  | Length | Value  |
+|--------+--------+--------|
+| TAG    |      1 | ~0xFD~ |
+| LENGTH |      1 | ~0x01~ |
+| Option |      1 | See options. |
+
+** Options
+
+| Rotate CASI 4001/4002       | ~0x01~ |
+| Rotate F2F supervision mode | ~0x02~ |
+
+* Appendix A: Operational Settings
+This section describes the various operational settings available to the device. Each
+setting resides in a particular index within the /OpSettings/ data structure. The
+value of each index is represented by a ~uint16_t~ and can take the form of an integer,
+bitmask, or boolean toggle depending on the setting.
+
+Each index and possible values are described below.
+
+** OpSettings Index Values
+
+| Setting                       | Index |
+|-------------------------------+-------|
+| OPERATION                     |     0 |
+| NEXPACS OPTIONS               |     1 |
+| HOST SP OPTIONS               |     2 |
+| BLE OPTIONS 1                 |     3 |
+| KEYPAD OPTIONS                |     4 |
+| CARD TRACKER TIME OUT         |     5 |
+| LED OPTIONS 1                 |     6 |
+| WIEGAND SPACE                 |     7 |
+| WIEGAND PULSE                 |     8 |
+| BLE TIMEOUT MSW               |     9 |
+| BLE TIMEOUT LSW               |    10 |
+| RF ON EXTENSION               |    11 |
+| BUILD                         |    12 |
+| OSDP KP OPTIONS               |    13 |
+| F2F MCLP                      |    14 |
+| WIEGAND DATA OPTIONS          |    15 |
+| CARD DETECT METHOD MAX        |    16 |
+| CARD DETECT RANGE PERIOD      |    17 |
+| EXT OPERATION                 |    18 |
+| ADC BOUNDARY                  |    19 |
+| CARD DATA PREFIX SUFFIX       |    20 |
+| CARD DATA DELIMITER           |    21 |
+| CARD DATA FORMAT              |    22 |
+| CARD DATA BS FORMAT           |    23 |
+| CARD DATA PARITY STRIP        |    24 |
+| CARD PRE POST DATA 1          |    25 |
+| CARD PRE POST DATA 2          |    26 |
+| CARD PRE POST DATA 3          |    27 |
+| CARD REMOVED 1 2              |    28 |
+| INTER CHAR DELAY              |    29 |
+| CSN FORMAT ISO14443A CL1 CL2  |    30 |
+| CSN FORMAT ISO14443B FELICA   |    31 |
+| CSN FORMAT ISO15693 PICO15693 |    32 |
+| PROX BITSTREAM FORMAT         |    33 |
+| RF POLL TIMEOUT               |    33 |
+| NEXPACS APP SETTINGS 1        |    35 |
+| NEXPACS APP SETTINGS 2        |    36 |
+| CARD AV OPTIONS 1             |    37 |
+| CARD AV OPTIONS 2             |    38 |
+| SENSITIVITY                   |    39 |
+| FIPS 201                      |    40 |
+| FEATURE COUNT DOWN            |    41 |
+| LED OPTIONS 2                 |    42 |
+| LED OPTIONS 3                 |    43 |
+| LEAF IP DEF                   |    45 |
+| LEAF IP KS1                   |    46 |
+| LEAF IP KS2                   |    47 |
+| LEAF IP KS3                   |    48 |
+| BLE OPTIONS 2                 |    49 |
+| LOCK RELOCK DELAY             |    50 |
+| LOCK MOTOR ON TIME            |    51 |
+| LOCK FAIL STATE               |    52 |
+| LED BAR 1                     |    53 |
+| LED BAR 2                     |    54 |
+| MFC APP                       |    55 |
+| DEF TAMPER COUNTDOWN          |    56 |
+| OSDP VENDOR CODE VC1          |    57 |
+| OSDP VENDOR CODE VC2 3        |    58 |
+| SPECIAL FEATURES              |    59 |
+| CAPTOUCH FEATURES             |    60 |
+
+** Settings Values
+The following sections describe the possible values for each index in the operational
+settings sctructure.
+
+*** Operation
+
+*Type:* Bitmask
+
+| Enable higher RF baud rates    | ~0x0001~, ~0x0002~ |
+| Enable ASK                     | ~0x0004~           |
+| Enable FSK                     | ~0x0008~           |
+| Enable HF                      | ~0x0010~           |
+| Enable BLE                     | ~0x0020~           |
+| Disable card tracker           | ~0x0080~           |
+| Enable tamper cntl line        | ~0x0100~           |
+| Enable tamper events           | ~0x0200~           |
+| Enable host cntl A/V           | ~0x0400~           |
+| Enable host cntl A/V exclusive | ~0x0800~           |
+| Enable tamper audio alarm      | ~0x1000~           |
+| Enable include CSN             | ~0x2000~           |
+| Report tamper state change     | ~0x4000~           |
+| OSDP auto-detect               | ~0x8000~           |
+
+*** NEXPACs Options
+
+*Type:* Bitmask
+
+| SKIP_CIO                   | ~0x0001~ |
+| SKIP_SIGNATURE_CHECK       | ~0x0002~ |
+| SEND_ALL_NEXPACS_DATA      | ~0x0004~ |
+| SEND_NEXPACS_SITE_CODE     | ~0x0008~ |
+| SEND_NEXPACS_CREDENTIAL_ID | ~0x0010~ |
+| USE_ISO7816_WRAPPER        | ~0x0020~ |
+| PRE_SELECT_DF_NAME         | ~0x0040~ |
+| NEXPACS_AID_B2_MASK        | ~0xF000~ |
+| NEXPACS_KEYSET_MASK        | ~0x0F00~ |
+| NEXPACS_KEYSET_DEF         | ~0x0000~ |
+| NEXPACS_KEYSET_1           | ~0x0100~ |
+| NEXPACS_KEYSET_2           | ~0x0200~ |
+| NEXPACS_KEYSET_3           | ~0x0300~ |
+
+*** Host SP Options
+
+#+BEGIN_SRC C
+#define HOST_SP_BAUD_RATE_MASK    0x0007
+// 7 bit address, 0x00 .. 0x7E, 0x7F = Broadcast
+#define HOST_SP_ADDR_MASK         0x03F8
+// Allow up to 4 RS485 protocols
+#define HOST_SP_PROTOCOL_MASK     0x0C00
+// OSDP COMSET command terminates secure channel
+#define OSDP_COMSET_KILLS_SC      0x1000
+// Prevent secure channel OSDP when using OSDP broadcast address
+#define OSDP_PREVENT_SC_WITH_BA   0x2000
+#+END_SRC
+
+*** Keypad Options
+
+
+
+
+* Appendix B: RF Protocols
+This section describes the available options for the RF Protocols configuration block.
+
+/NOTE: Up to 16 protocols can be configured simultaneously./
+
+| Protocol      | ID |
+|---------------+----|
+| CP_NONE       |  0 |
+| CP_ISO_14443A |  1 |
+| CP_ISO_14443B |  2 |
+| CP_ISO_15693  |  3 |
+| CP_PICO_15693 |  4 |
+| CP_FELICA     |  5 |
+| CP_ECP_NFC    |  6 |
+
+* Appendix C: Card Apps
+This section describes the supported card applications. These reside in the /CardTypeApps/
+configuration block.
+
+/NOTE: Up to 8 card apps can be configured simultaneously./
+
+| Card App             | ID |
+|----------------------+----|
+| CA_NONE              |  0 |
+| CA_CSN               |  1 |
+| CA_NEXPACS           |  2 |
+| CA_FEATURES_KEYS     |  3 |
+| CA_FIPS_201_1        |  4 |
+| CA_VISA_MFC_APP      |  6 |
+| CA_LEAF_IP           |  7 |
+| CA_MFC_SMARTMAX      |  8 |
+| CA_MFD_SMARTMAX      |  9 |
+| CA_MFC_FIDELITY      | 10 |
+| CA_DAIMLER_CID       | 12 |
+| CA_UPS               | 13 |
+| CA_TRANSPARENT_XRW   | 14 |
+| CA_BARRY             | 15 |
+| CA_ANDROID_NFC       | 16 |
+| CA_BIO_APP_INSTALLER | 17 |
+| CA_MERIDIAN_NFC      | 18 |
