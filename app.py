@@ -18,7 +18,7 @@ def index():
 def run_pipeline():
     file = request.files.get('file')
     if not file or file.filename == '':
-        return "No file selected", 400
+        return jsonify({"error": "No file selected"}), 400
 
     original_name = secure_filename(file.filename)
     session_id = str(uuid.uuid4())[:8]
@@ -35,10 +35,29 @@ def run_pipeline():
         os.makedirs(sheets_dir, exist_ok=True)
         os.makedirs(ws_output_dir, exist_ok=True)
 
-        # 1. Save uploaded file to /sales/sheets
-        file.save(os.path.join(sheets_dir, original_name))
+        # Save uploaded file to /sales/sheets
+        uploaded_file_path = os.path.join(sheets_dir, original_name)
+        file.save(uploaded_file_path)
 
-        # 2. STEP 1: Run the shell script (The "Magic Sales" part)
+        # Extract the real Config Name to know what output file to expect 
+        config_name = None
+        try:
+            import csv
+            with open(uploaded_file_path, mode='r', encoding='utf-8', errors='ignore') as f:
+                reader = csv.reader(f)
+                for row in reader:
+                    if row and "Config Name" in row[0]:
+                        config_name = row[1].strip()
+                        break
+        except Exception as csv_err:
+            return jsonify({"error": f"Failed to parse CSV headers: {str(csv_err)}"}), 400
+
+        if not config_name:
+            config_name = original_name.split('.')[0]
+        
+        generated_filename = f"{config_name}.csv"
+
+        # Run the shell script (The "Magic Sales" part)
         shell_result = subprocess.run(
             ['sh', 'newMagicSales.sh', f'./sheets/{original_name}'], 
             cwd=sales_dir, 
@@ -46,18 +65,18 @@ def run_pipeline():
             text=True
         )
         if shell_result.returncode != 0:
-            return f"newMagicSales.sh failed: {shell_result.stderr}", 500
+            return jsonify({"error": f"newMagicSales.sh failed: {shell_result.stderr}"}), 500
 
-        # 3. STEP 2: Move generated file from /sales to /scripts
-        source_path = os.path.join(sales_dir, original_name)
-        dest_path = os.path.join(scripts_dir, original_name)
+        # Move generated file from /sales to /scripts
+        source_path = os.path.join(sales_dir, generated_filename)
+        dest_path = os.path.join(scripts_dir, generated_filename)
         
         if not os.path.exists(source_path):
-            return f"Error: Shell script finished but {original_name} was not found in {sales_dir}", 500
+            return jsonify({"error": f"Shell script finished but {generated_filename} was not found in {sales_dir}"}), 500
             
         shutil.move(source_path, dest_path)
 
-        # 4. STEP 3: Run buildCfg.py using the Absolute Path
+        # Run buildCfg.py using the Absolute Path
         abs_csv_path = os.path.abspath(dest_path)
         result = subprocess.run(
             ['python3', 'buildCfg.py', abs_csv_path], 
@@ -69,14 +88,14 @@ def run_pipeline():
         if result.returncode != 0:
             raise subprocess.CalledProcessError(result.returncode, result.args, output=result.stdout, stderr=result.stderr)
 
-        # 5. STEP 4: Zip and Send
-        zip_base_name = os.path.join(run_dir, f"processed_{original_name.split('.')[0]}")
+        # Zip and Send
+        zip_base_name = os.path.join(run_dir, f"processed_{config_name}")
         zip_path = shutil.make_archive(zip_base_name, 'zip', ws_output_dir)
 
         return send_file(zip_path, as_attachment=True)
     
     except subprocess.CalledProcessError as e:
-        return jsonify({"error": f"Script Error: {e.stderr}"}), 500
+        return jsonify({"error": f"Script Error: {e.stderr if e.stderr else e.output}"}), 500
         
     except Exception as e:
         return jsonify({"error": f"System Error: {str(e)}"}), 500

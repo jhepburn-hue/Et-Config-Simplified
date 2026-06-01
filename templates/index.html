@@ -111,15 +111,15 @@
     form.onsubmit = async function(e) {
         e.preventDefault(); 
 
-        // 1. Show Loading State
+        // Show Loading State
         formArea.style.display = 'none';
         loadingArea.style.display = 'block';
 
-        // 2. Prepare the file to send
+        // Prepare the file to send
         const formData = new FormData(form);
 
         try {
-            // 3. Send to Python and wait for the response
+            // Send to Python and wait for the response
             const response = await fetch('/upload', {
                 method: 'POST',
                 body: formData
@@ -130,10 +130,10 @@
                 throw new Error(errorData.error || 'Unknown server error');
             }
 
-            // 4. Convert the response to the ZIP file
+            // Convert the response to the ZIP file
             const blob = await response.blob();
             
-            // 5. Create a hidden link to trigger the download
+            // Create a hidden link to trigger the download
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -142,7 +142,7 @@
             a.click();
             a.remove();
 
-            // 6. Update UI to "Success" only after the download starts
+            // Update UI to "Success" only after the download starts
             loadingArea.innerHTML = `
                 <div style="color: #059669; font-weight: 600; font-size: 1.2rem;">Success!</div>
                 <p>Your configuration ZIP has been generated.</p>

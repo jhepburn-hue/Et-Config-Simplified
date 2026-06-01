@@ -11,6 +11,28 @@ import yaml
 import binascii
 from urllib3.exceptions import InsecureRequestWarning
 from datetime import date
+import ast
+
+def safe_int_eval(val):
+    val = str(val).strip()
+
+    if val == '':
+        return 0
+    
+    try:
+        # Attempt standard base-10 integer conversion first
+        return int(val)
+    except ValueError:
+        try:
+            # Safely parse complex code structures like '1 << 8' or bitwise shifts
+            return int(ast.literal_eval(val))
+        except Exception:
+            # Fallback handle standalone operators/broken inputs gracefully without crashing the pipeline
+            if "<<" in val:
+                clean_val = val.lstrip('< ').strip()
+                if clean_val.isdigit():
+                    return 1 << int(clean_val)
+            raise
 
 # Suppress only the single warning from urllib3 needed.
 requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
@@ -283,18 +305,18 @@ if __name__ == "__main__":
                         setVal3 = eval("wl." + setting[3].strip())
                     except (AttributeError, SyntaxError):
                         setVal3 = int(setting[3].strip())
-                    config.setCardTypeApp(int(setOptName), int(setOptVal), int(setVal3))
+                    config.setCardTypeApp(int(setOptName), safe_int_eval(setOptVal), int(setVal3))
             elif "RF" == operation:
-                config.setRf(int(setOptName), int(setOptVal))
+                config.setRf(int(setOptName), safe_int_eval(setOptVal))
             elif "OPT" == operation:
-                config.setOpt(int(setOptName), int(setOptVal))
+                config.setOpt(safe_int_eval(setOptName), safe_int_eval(setOptVal))
             elif "OPT_AUG" == operation:
                 # print(setting)
-                config.appendOpt(setOptName, int(setOptVal))
+                config.appendOpt(setOptName, safe_int_eval(setOptVal))
             elif "OPT_MASK" == operation:
-                config.maskOpt(setOptName, int(setOptVal) & 0xFFFF)
+                config.maskOpt(setOptName, safe_int_eval(setOptVal) & 0xFFFF)
             elif "OPT_MASK_INV" == operation:
-                config.maskOpt(setOptName, ~(int(setOptVal)) & 0xFFFF)
+                config.maskOpt(setOptName, ~(safe_int_eval(setOptVal)) & 0xFFFF)
             elif "LED" == operation:
                 loopCount = 0
                 final = 0
@@ -308,7 +330,7 @@ if __name__ == "__main__":
                     else:
                         final |= led
                     loopCount += 1
-                config.setOpt(wl.LED_OPTIONS_1_INDEX, final)
+                config.setOpt(safe_int_eval(wl.LED_OPTIONS_1_INDEX), safe_int_eval(final))
             elif "HW" == operation:
                 if "TYPE" == setOptName:
                     config.setType(setOptVal)
@@ -318,19 +340,19 @@ if __name__ == "__main__":
                     else:
                         config.disableAskSupport()
             elif "BS_AUG" == operation:
-                config.augBS(setOptName, int(setOptVal))
+                config.augBS(setOptName, safe_int_eval(setOptVal))
             elif "BS_SET" == operation:
-                config.setBS(setOptName, int(setOptVal))
+                config.setBS(setOptName, safe_int_eval(setOptVal))
             elif "BS_FILTER_MASK" == operation:
-                config.setFilterMask(int(setOptName), int(setOptVal))
+                config.setFilterMask(int(setOptName), safe_int_eval(setOptVal))
             elif "BS_FILTER_VALUE" == operation:
-                config.setFilterValue(int(setOptName), int(setOptVal))
+                config.setFilterValue(int(setOptName), safe_int_eval(setOptVal))
             elif "MOBILE" == operation:
-                config.setMobile(setOptName, "SET", int(setOptVal))
+                config.setMobile(setOptName, "SET", safe_int_eval(setOptVal))
             elif "MOBILE_MASK" == operation:
-                config.setMobile(setOptName, "MASK", int(setOptVal))
+                config.setMobile(setOptName, "MASK", safe_int_eval(setOptVal))
             elif "MOBILE_AUG" == operation:
-                config.setMobile(setOptName, "AUG", int(setOptVal))
+                config.setMobile(setOptName, "AUG", safe_int_eval(setOptVal))
             # TODO: need to figure out key import
 
             # elif ( "KEY"== operation):
