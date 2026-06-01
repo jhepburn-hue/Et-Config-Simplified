@@ -4,6 +4,12 @@ import subprocess
 import uuid
 from flask import Flask, request, render_template, send_file, jsonify
 from werkzeug.utils import secure_filename
+import sys
+
+def get_base_path():
+    if 'app.asar' in os.getcwd():
+        return os.getcwd().replace('app.asar', 'app.asar.unpacked')
+    return os.getcwd()
 
 app = Flask(__name__)
 
@@ -25,7 +31,7 @@ def run_pipeline():
     run_dir = os.path.join(os.getcwd(), 'temp_runs', session_id)
     
     try:
-        shutil.copytree(os.path.abspath('logic-repo'), run_dir)
+        shutil.copytree(os.path.join(get_base_path(), 'logic-repo'), run_dir)
         
         sales_dir = os.path.join(run_dir, 'sales')
         sheets_dir = os.path.join(sales_dir, 'sheets')

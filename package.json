@@ -1,0 +1,33 @@
+{
+  "name": "et-config-web",
+  "version": "1.0.0",
+  "description": "This application is a web-based interface for the `et-config` logic. It allows users to upload a CSV, processes it through a two-stage pipeline (Shell script + Python logic), and provides a downloadable ZIP file containing the generated configurations.",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "npx electron-forge start",
+    "package": "npx electron-forge package",
+    "make": "npx electron-forge make"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jhepburn-hue/Et-Config-Web.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/jhepburn-hue/Et-Config-Web/issues"
+  },
+  "homepage": "https://github.com/jhepburn-hue/Et-Config-Web#readme",
+  "dependencies": {
+    "openport": "^0.0.6"
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^7.6.0",
+    "@electron-forge/maker-squirrel": "^7.6.0",
+    "@electron-forge/maker-zip": "^7.6.0",
+    "electron": "^31.0.0"
+  }
+}

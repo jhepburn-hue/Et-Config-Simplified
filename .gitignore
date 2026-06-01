@@ -1,0 +1,19 @@
+# Dependency Directories
+node_modules/
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Electron Compilation Distributions
+out/
+dist/
+build/
+
+# Operating System Trash Files
+.DS_Store
+Thumbs.db
+
+# Dynamic Pipeline Temp Runs
+temp_runs/
+uploads/
