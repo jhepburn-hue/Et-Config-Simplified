@@ -23,10 +23,13 @@ def index():
 @app.route('/upload', methods=['POST'])
 def run_pipeline():
     file = request.files.get('file')
+    mode = request.form.get('mode', 'full') 
+    
     if not file or file.filename == '':
         return jsonify({"error": "No file selected"}), 400
 
     original_name = secure_filename(file.filename)
+    base_filename = original_name.rsplit('.', 1)[0]
     session_id = str(uuid.uuid4())[:8]
     run_dir = os.path.join(os.getcwd(), 'temp_runs', session_id)
     
@@ -41,11 +44,25 @@ def run_pipeline():
         os.makedirs(sheets_dir, exist_ok=True)
         os.makedirs(ws_output_dir, exist_ok=True)
 
-        # Save uploaded file to /sales/sheets
-        uploaded_file_path = os.path.join(sheets_dir, original_name)
+        # Dynamic Name Suffixes Based on Selection
+        if mode == 'sales_only':
+            export_name = f"{base_filename}_EDITABLE.csv"
+        elif mode == 'build_only':
+            export_name = f"{base_filename}_CONFIGS.zip"
+        else:
+            export_name = f"{base_filename}_FULL_PIPELINE.zip"
+
+        # Setup File Routing & Save
+        if mode == 'build_only':
+            uploaded_file_path = os.path.join(scripts_dir, original_name)
+            generated_filename = original_name
+        else:
+            uploaded_file_path = os.path.join(sheets_dir, original_name)
+            
+        # Save the file stream once so it writes full contents
         file.save(uploaded_file_path)
 
-        # Extract the real Config Name to know what output file to expect 
+        # Extract Config Name from CSV Headers
         config_name = None
         try:
             import csv
@@ -59,46 +76,61 @@ def run_pipeline():
             return jsonify({"error": f"Failed to parse CSV headers: {str(csv_err)}"}), 400
 
         if not config_name:
-            config_name = original_name.split('.')[0]
+            config_name = base_filename
         
-        generated_filename = f"{config_name}.csv"
+        if mode != 'build_only':
+            generated_filename = f"{config_name}.csv"
 
-        # Run the shell script (The "Magic Sales" part)
-        shell_result = subprocess.run(
-            ['sh', 'newMagicSales.sh', f'./sheets/{original_name}'], 
-            cwd=sales_dir, 
-            capture_output=True, 
-            text=True
-        )
-        if shell_result.returncode != 0:
-            return jsonify({"error": f"newMagicSales.sh failed: {shell_result.stderr}"}), 500
+        # STEP 1: Run Magic Sales Script (Option 1 & Option 2)
+        if mode in ['full', 'sales_only']:
+            shell_result = subprocess.run(
+                ['sh', 'newMagicSales.sh', f'./sheets/{original_name}'], 
+                cwd=sales_dir, 
+                capture_output=True, 
+                text=True
+            )
+            if shell_result.returncode != 0:
+                return jsonify({"error": f"newMagicSales.sh failed: {shell_result.stderr}"}), 500
 
-        # Move generated file from /sales to /scripts
-        source_path = os.path.join(sales_dir, generated_filename)
-        dest_path = os.path.join(scripts_dir, generated_filename)
-        
-        if not os.path.exists(source_path):
-            return jsonify({"error": f"Shell script finished but {generated_filename} was not found in {sales_dir}"}), 500
+            source_path = os.path.join(sales_dir, generated_filename)
+            if not os.path.exists(source_path):
+                return jsonify({"error": f"Shell script finished but {generated_filename} was not found in {sales_dir}"}), 500
+
+            # If user ONLY wants the intermediate CSV, send it back immediately
+            if mode == 'sales_only':
+                # We need a persistent copy to send outside the try/finally cleanup block
+                out_csv_path = os.path.join(os.getcwd(), 'uploads', f"edited_{generated_filename}")
+                shutil.copy(source_path, out_csv_path)
+                return send_file(out_csv_path, as_attachment=True, download_name=f"edited_{generated_filename}")
+
+            # If Full Pipeline, move intermediate CSV to scripts folder for step 2
+            dest_path = os.path.join(scripts_dir, generated_filename)
+            shutil.move(source_path, dest_path)
+
+        # STEP 2: Run Build Config Script (Option 1 & Option 3)
+        if mode in ['full', 'build_only']:
+            target_csv = os.path.join(scripts_dir, generated_filename)
+            abs_csv_path = os.path.abspath(target_csv)
             
-        shutil.move(source_path, dest_path)
+            result = subprocess.run(
+                ['python3', 'buildCfg.py', abs_csv_path], 
+                cwd=scripts_dir, 
+                capture_output=True, 
+                text=True
+            )
 
-        # Run buildCfg.py using the Absolute Path
-        abs_csv_path = os.path.abspath(dest_path)
-        result = subprocess.run(
-            ['python3', 'buildCfg.py', abs_csv_path], 
-            cwd=scripts_dir, 
-            capture_output=True, 
-            text=True
-        )
+            if result.returncode != 0:
+                raise subprocess.CalledProcessError(result.returncode, result.args, output=result.stdout, stderr=result.stderr)
 
-        if result.returncode != 0:
-            raise subprocess.CalledProcessError(result.returncode, result.args, output=result.stdout, stderr=result.stderr)
+            # Zip and Send configurations
+            zip_base_name = os.path.join(run_dir, f"processed_{config_name}")
+            zip_path = shutil.make_archive(zip_base_name, 'zip', ws_output_dir)
 
-        # Zip and Send
-        zip_base_name = os.path.join(run_dir, f"processed_{config_name}")
-        zip_path = shutil.make_archive(zip_base_name, 'zip', ws_output_dir)
-
-        return send_file(zip_path, as_attachment=True)
+            # Copy zip out of run_dir to safely send it without cleanup race conditions
+            out_zip_path = os.path.join(os.getcwd(), 'uploads', f"processed_{config_name}.zip")
+            shutil.copy(zip_path, out_zip_path)
+            
+            return send_file(out_zip_path, as_attachment=True, download_name=f"processed_{config_name}.zip")
     
     except subprocess.CalledProcessError as e:
         return jsonify({"error": f"Script Error: {e.stderr if e.stderr else e.output}"}), 500
@@ -110,4 +142,5 @@ def run_pipeline():
             shutil.rmtree(run_dir)
 
 if __name__ == '__main__':
-    app.run(port=5000, debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
