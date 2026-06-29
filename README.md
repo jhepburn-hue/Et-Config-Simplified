@@ -1,16 +1,19 @@
-# Et-Config (Desktop GUI & Web Application)
+# Et-Config (Simplified)
 
-This application provides a modern desktop GUI and web-based interface wrapping the core `et-config` compilation utility pipeline. 
+This application provides a web-based interface wrapping the core `et-config` compilation utility pipeline. 
 
 ---
 
 ## How it Works
 
-1. **Upload / Trigger**: The user imports a profile configuration `.csv` directly.
+1. **Upload / Trigger**: The user imports a profile configuration`.csv` directly and selects how to run the program (options 1 to 3).
 2. **Sandbox Environment**: The app isolates execution by provisioning a dedicated thread working environment in `temp_runs/`.
 3. **Stage 1 (Shell Automation)**: Calls `logic-repo/sales/newMagicSales.sh` to extract the baseline profile name and generate formatted operational rows.
 4. **Stage 2 (Compilation Backend)**: Automatically pipes values down into `logic-repo/scripts/buildCfg.py` utilizing math validation overrides for empty cells and bitwise calculations.
-5. **Asset Distribution**: Packages output assets into a structured `.zip` framework format and delivers them immediately to the user's downloads folder.
+5. **Option 1**: Calls both Stage 1 and Stage 2 commands.
+6. **Option 2**: Calls only Stage 1 command.
+7. **Option 3**: Calls only Stage 2 command.
+8. **Asset Distribution**: Packages output assets into a structured `.zip` or `.csv` framework format and delivers them immediately to the user's downloads folder.
 
 ---
 
@@ -42,7 +45,7 @@ pip install -r requirements.txt
 
 ---
 
-### Running Locally (Web Interface)
+### Running Locally
 
 Start the Flask server:
 ```bash
@@ -53,23 +56,3 @@ Open your browser and navigate to:
 ```bash
 http://127.0.0.1:5000
 ```
-
-### Running Locally (GUI Interface)
-
-Launch development GUI window and produce the output distribution archive:
-```bash
-npm start
-npm run make
-```
-
-For macOS (Apple Silicon arm64):
-- Unzip the generated standalone artifact located at:
-  ```text
-  out/make/zip/darwin/arm64/et-config-web-darwin-arm64-1.0.0.zip
-  ```
-
-For Windows (x64 Setup):
-- Execute the setup binary package layout file located inside:
-  ```text
-  out/make/squirrel.windows/x64/
-  ```
